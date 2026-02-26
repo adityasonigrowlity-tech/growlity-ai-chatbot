@@ -1,9 +1,0 @@
-**/node_modules
-npm-debug.log
-.env
-Backend/tests
-Backend/*.mp3
-Frontend/dist
-Frontend/node_modules
-Dockerfile
-.dockerignore
