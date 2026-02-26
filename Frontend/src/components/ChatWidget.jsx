@@ -4,7 +4,6 @@ import { Send, X, Maximize2, Minimize2, RotateCcw, Edit2, Check, XCircle, Volume
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-
 const ChatWidget = ({ config }) => {
     // ... existing state ...
     const [isOpen, setIsOpen] = useState(false);
