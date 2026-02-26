@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow AI - Knowledge Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --grow-green: #16A34A;
+            --grow-blue: #2563EB;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --white: #ffffff;
+            --navbar-height: 70px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--gray-100);
+            margin: 0;
+            padding-top: calc(var(--navbar-height) + 40px);
+            padding-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--navbar-height);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            z-index: 1000;
+        }
+        .nav-logo { font-weight: 600; color: var(--grow-green); font-size: 20px; text-decoration: none; }
+        .nav-links { display: flex; gap: 32px; }
+        .nav-links a { 
+            text-decoration: none; 
+            color: #4b5563; 
+            font-weight: 600; 
+            transition: all 0.2s; 
+            padding: 8px 0;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+        }
+        .nav-links a:hover { color: var(--grow-blue); }
+        .nav-links a.active { 
+            color: var(--grow-blue); 
+            border-bottom: 2px solid var(--grow-blue);
+        }
+        
+        .admin-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--white);
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        h1 { color: var(--grow-green); margin-bottom: 32px; text-align: center; }
+        .section { margin-bottom: 48px; padding-bottom: 32px; }
+        .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        h2 { font-size: 18px; margin-bottom: 16px; color: #333; display: flex; align-items: center; gap: 8px; }
+        
+        /* Tab Logic */
+        .tab-content { display: none; width: 100%; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: var(--grow-blue);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        button:disabled { background-color: var(--gray-200); cursor: not-allowed; }
+        #status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            min-width: 250px;
+        }
+        .success { background-color: #dcfce7; color: #166534; display: block !important; border: 1px solid #b9f6ca; }
+        .error { background-color: #fee2e2; color: #991b1b; display: block !important; border: 1px solid #fecaca; }
+        .loading { color: var(--grow-blue); font-weight: 600; background: white; border: 1px solid var(--gray-200); display: block !important; }
+
+        /* Knowledge Card Styles */
+        .knowledge-card {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .knowledge-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .card-title { font-weight: 600; color: #1f2937; font-size: 16px; margin: 0; word-break: break-all; max-width: 80%; }
+        .card-badge { background: var(--gray-100); color: #4b5563; font-size: 12px; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+        .card-preview { font-size: 13px; color: #6b7280; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
+        .card-actions { display: flex; gap: 12px; margin-top: auto; }
+        .btn-manage { background: var(--gray-100); color: #4b5563; border: 1px solid var(--gray-200); padding: 8px 12px; font-size: 13px; border-radius: 6px; flex-grow: 1; text-align: center; cursor: pointer; }
+        .btn-manage:hover { background: var(--gray-200); }
+        .btn-delete-all { background: #fee2e2; color: #991b1b; padding: 8px 12px; font-size: 13px; border-radius: 6px; border: 1px solid #fecaca; flex-shrink: 0; }
+        .btn-delete-all:hover { background: #fecaca; }
+
+        /* Chunk List */
+        .chunks-container { 
+            display: none; 
+            margin-top: 16px; 
+            padding-top: 16px; 
+            border-top: 1px dashed var(--gray-200); 
+            max-height: 300px; 
+            overflow-y: auto; 
+        }
+        .chunks-container.active { display: block; animation: slideDown 0.3s ease-out; }
+        .chunk-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            padding: 10px; 
+            background: var(--gray-100); 
+            border-radius: 6px; 
+            margin-bottom: 8px; 
+            font-size: 12px; 
+        }
+        .chunk-text { color: #4b5563; line-height: 1.4; padding-right: 12px; }
+        .btn-delete-chunk { color: #ef4444; background: none; border: none; padding: 4px; font-size: 11px; font-weight: 600; cursor: pointer; opacity: 0.7; }
+        .btn-delete-chunk:hover { opacity: 1; text-decoration: underline; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="#" class="nav-logo">🌱 Growlity Ai Admin</a>
+        <div class="nav-links">
+            <a onclick="switchTab('management')" id="nav-management" class="active">Knowledge Management</a>
+            <a onclick="switchTab('library')" id="nav-library">Knowledge Library</a>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <!-- Dashboard Section (Management) -->
+        <div id="management-tab" class="tab-content active">
+            <h1>Growlity Ai Management</h1>
+            <div class="section">
+                <h2>🔗 Add via URL</h2>
+                <input type="text" id="urlTitleInput" placeholder="Knowledge Title (e.g. ESG Policy)">
+                <input type="url" id="urlInput" placeholder="https://growlity.com/some-page">
+                <button onclick="ingestUrl()" id="urlBtn">Scrape & Ingest</button>
+            </div>
+
+            <div class="section">
+                <h2>📝 Add via Text</h2>
+                <input type="text" id="titleInput" placeholder="Knowledge Title (e.g. CEO Info)">
+                <textarea id="textInput" rows="6" placeholder="Paste knowledge text here..."></textarea>
+                <button onclick="ingestText()" id="textBtn">Ingest Text</button>
+            </div>
+        </div>
+
+        <!-- Library Section -->
+        <div id="library-tab" class="tab-content">
+            <h1>Knowledge Library</h1>
+            <div class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h2 style="margin: 0;">📚 Database Inventory</h2>
+                    <button onclick="fetchKnowledge()" style="background: var(--grow-green); padding: 8px 16px; font-size: 14px;">Refresh List</button>
+                </div>
+                <div id="knowledgeGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                    <!-- Cards will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const BACKEND_URL = 'http://localhost:5000'; // Explicitly target backend
+        
+        function switchTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(`${tab}-tab`).classList.add('active');
+            document.getElementById(`nav-${tab}`).classList.add('active');
+            
+            if (tab === 'library') fetchKnowledge();
+        }
+
+        function showStatus(msg, type) {
+            statusDiv.textContent = msg;
+            statusDiv.className = type;
+            setTimeout(() => { if (type !== 'loading') statusDiv.className = ''; }, 5000);
+        }
+
+        async function fetchKnowledge() {
+            const grid = document.getElementById('knowledgeGrid');
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">Loading database...</div>';
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/ingest/list`);
+                const data = await res.json();
+                
+                if (data.length === 0) {
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">No knowledge groups found.</div>';
+                    return;
+                }
+
+                // Group by source
+                const groups = data.reduce((acc, item) => {
+                    const source = item.metadata?.source || 'Manual Entry';
+                    if (!acc[source]) acc[source] = { chunks: [], preview: item.content };
+                    acc[source].chunks.push({ 
+                        id: item._id, 
+                        content: item.content,
+                        index: item.metadata?.chunkIndex || 0 
+                    });
+                    return acc;
+                }, {});
+
+                grid.innerHTML = '';
+                Object.keys(groups).forEach((source, index) => {
+                    const group = groups[source];
+                    
+                    // Sort chunks by index (1st added shows 1st)
+                    group.chunks.sort((a, b) => a.index - b.index);
+                    
+                    const safeId = `group-${index}`;
+                    const card = document.createElement('div');
+                    card.className = 'knowledge-card';
+                    
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <h3 class="card-title">${source}</h3>
+                            <span class="card-badge" id="badge-${safeId}">${group.chunks.length} chunks</span>
+                        </div>
+                        <div class="card-preview">${group.preview.substring(0, 120)}...</div>
+                        <div class="card-actions">
+                            <button class="btn-manage" onclick="toggleChunks('${safeId}')">Manage Chunks</button>
+                            <button class="btn-delete-all" onclick="deleteSource('${encodeURIComponent(source)}')">Delete Group</button>
+                        </div>
+                        <div id="${safeId}-container" class="chunks-container">
+                            ${group.chunks.map(chunk => `
+                                <div class="chunk-item" id="chunk-${chunk.id}">
+                                    <div class="chunk-text">${chunk.content.substring(0, 150)}...</div>
+                                    <button class="btn-delete-chunk" onclick="deleteChunkUI('${chunk.id}', '${safeId}', '${encodeURIComponent(source)}')">Delete</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (err) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: red;">Error loading library.</div>';
+            }
+        }
+
+        function toggleChunks(safeId) {
+            const container = document.getElementById(`${safeId}-container`);
+            container.classList.toggle('active');
+        }
+
+        async function deleteChunkUI(id, safeId, encodedSource) {
+            if (!confirm('Delete this specific chunk?')) return;
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/ingest/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    showStatus('Chunk removed', 'success');
+                    
+                    // Update UI immediately without full refresh
+                    const chunkEl = document.getElementById(`chunk-${id}`);
+                    if (chunkEl) chunkEl.remove();
+
+                    // Update badge count
+                    const badge = document.getElementById(`badge-${safeId}`);
+                    const currentCount = parseInt(badge.textContent);
+                    if (currentCount <= 1) {
+                        fetchKnowledge(); // Last chunk gone, refresh list
+                    } else {
+                        badge.textContent = `${currentCount - 1} chunks`;
+                    }
+                } else {
+                    showStatus(data.error || 'Failed to delete', 'error');
+                }
+            } catch (err) {
+                showStatus('Network error occurred', 'error');
+            }
+        }
+
+        async function deleteSource(sourceName) {
+            const decodedSource = decodeURIComponent(sourceName);
+            if (!confirm(`Are you sure you want to delete ALL information related to "${decodedSource}"?`)) return;
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/ingest/source/${sourceName}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    showStatus(data.message, 'success');
+                    fetchKnowledge();
+                } else {
+                    showStatus(data.error || 'Failed to delete', 'error');
+                }
+            } catch (err) {
+                showStatus('Network error occurred', 'error');
+            }
+        }
+
+        // Initialize
+        window.onload = () => switchTab('management');
+
+        async function ingestUrl() {
+            const url = document.getElementById('urlInput').value;
+            const title = document.getElementById('urlTitleInput').value;
+            const btn = document.getElementById('urlBtn');
+            if (!url) return alert('Please enter a URL');
+
+            btn.disabled = true;
+            showStatus('Scraping and embedding... please wait.', 'loading');
+            console.log('Ingesting URL to:', `${BACKEND_URL}/api/ingest/url`);
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/ingest/url`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, title })
+                });
+                console.log('Status Code:', res.status);
+                const data = await res.json();
+                if (data.success) {
+                    showStatus(data.message, 'success');
+                    document.getElementById('urlInput').value = '';
+                    document.getElementById('urlTitleInput').value = '';
+                } else {
+                    showStatus(data.error || 'Failed to ingest', 'error');
+                }
+            } catch (err) {
+                console.error('Fetch Error Detail:', err);
+                showStatus('Network error occurred. Make sure backend is running on port 5000.', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function ingestText() {
+            const text = document.getElementById('textInput').value;
+            const title = document.getElementById('titleInput').value;
+            const btn = document.getElementById('textBtn');
+            if (!text) return alert('Please enter some text');
+
+            btn.disabled = true;
+            showStatus('Embedding and saving... please wait.', 'loading');
+            console.log('Ingesting Text to:', `${BACKEND_URL}/api/ingest/text`);
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/ingest/text`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, title })
+                });
+                console.log('Status Code:', res.status);
+                const data = await res.json();
+                if (data.success) {
+                    showStatus(data.message, 'success');
+                    document.getElementById('textInput').value = '';
+                    document.getElementById('titleInput').value = '';
+                } else {
+                    showStatus(data.error || 'Failed to ingest', 'error');
+                }
+            } catch (err) {
+                console.error('Fetch Error Detail:', err);
+                showStatus('Network error occurred. Make sure backend is running on port 5000.', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

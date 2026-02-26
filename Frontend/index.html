@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grow AI Chatbot Test Page</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 { color: #16A34A; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Growlity ESG Chatbot Test</h1>
+        <p>The chatbot widget should appear in the bottom right corner.</p>
+    </div>
+
+    <!-- The widget will be injected here during development by Vite -->
+    <script type="module" src="/src/main.jsx"></script>
+    
+    <script>
+        // In local development, main.jsx will handle the initialization
+        // because we added window.GrowAIChatbot.init() there.
+    </script>
+</body>
+</html>
