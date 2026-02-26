@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const mongoose = require('mongoose');
+const auth = require('./middleware/auth');
 
 // Load environment variables
 dotenv.config();
@@ -40,8 +41,9 @@ app.use(express.static('public'));
 app.use('/api/chat', limiter);
 
 // Routes
+app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
-app.use('/api/ingest', require('./routes/ingestRoutes'));
+app.use('/api/ingest', auth, require('./routes/ingestRoutes'));
 app.use('/api/tts', require('./routes/ttsRoutes'));
 
 app.get('/health', (req, res) => {

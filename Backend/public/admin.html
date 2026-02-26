@@ -1,6 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
+    <script>
+        // Immediate Auth Check
+        (async function() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+            try {
+                const res = await fetch('/api/auth/verify', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error();
+            } catch (err) {
+                localStorage.removeItem('adminToken');
+                window.location.href = '/login.html';
+            }
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grow AI - Knowledge Admin</title>
@@ -164,6 +181,54 @@
             from { opacity: 0; transform: translateY(-5px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            :root {
+                --navbar-height: 60px;
+            }
+            nav {
+                padding: 0 20px;
+                height: var(--navbar-height);
+            }
+            .nav-logo { font-size: 16px; }
+            .nav-links { gap: 16px; }
+            .nav-links a { font-size: 13px; }
+
+            body {
+                padding-top: calc(var(--navbar-height) + 20px);
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .admin-container {
+                padding: 20px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            h1 { font-size: 24px; margin-bottom: 24px; }
+            h2 { font-size: 16px; }
+
+            #knowledgeGrid {
+                grid-template-columns: 1fr !important;
+            }
+
+            .knowledge-card {
+                padding: 16px;
+            }
+
+            .card-title { font-size: 15px; }
+            .card-actions { flex-direction: column; }
+            .btn-manage, .btn-delete-all { width: 100%; text-align: center; }
+            
+            #status {
+                left: 20px;
+                right: 20px;
+                bottom: 20px;
+                min-width: unset;
+            }
+        }
     </style>
 </head>
 <body>
@@ -172,6 +237,7 @@
         <div class="nav-links">
             <a onclick="switchTab('management')" id="nav-management" class="active">Knowledge Management</a>
             <a onclick="switchTab('library')" id="nav-library">Knowledge Library</a>
+            <a onclick="logout()" style="color: #ef4444; cursor: pointer;">Logout</a>
         </div>
     </nav>
 
@@ -238,7 +304,9 @@
             grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">Loading database...</div>';
             
             try {
-                const res = await fetch(`${BACKEND_URL}/api/ingest/list`);
+                const res = await fetch(`${BACKEND_URL}/api/ingest/list`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                });
                 const data = await res.json();
                 
                 if (data.length === 0) {
@@ -304,7 +372,10 @@
             if (!confirm('Delete this specific chunk?')) return;
             
             try {
-                const res = await fetch(`${BACKEND_URL}/api/ingest/${id}`, { method: 'DELETE' });
+                const res = await fetch(`${BACKEND_URL}/api/ingest/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                });
                 const data = await res.json();
                 if (data.success) {
                     showStatus('Chunk removed', 'success');
@@ -334,7 +405,10 @@
             if (!confirm(`Are you sure you want to delete ALL information related to "${decodedSource}"?`)) return;
             
             try {
-                const res = await fetch(`${BACKEND_URL}/api/ingest/source/${sourceName}`, { method: 'DELETE' });
+                const res = await fetch(`${BACKEND_URL}/api/ingest/source/${sourceName}`, { 
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('adminToken')}` }
+                });
                 const data = await res.json();
                 if (data.success) {
                     showStatus(data.message, 'success');
@@ -363,7 +437,10 @@
             try {
                 const res = await fetch(`${BACKEND_URL}/api/ingest/url`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
                     body: JSON.stringify({ url, title })
                 });
                 console.log('Status Code:', res.status);
@@ -396,7 +473,10 @@
             try {
                 const res = await fetch(`${BACKEND_URL}/api/ingest/text`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    },
                     body: JSON.stringify({ text, title })
                 });
                 console.log('Status Code:', res.status);
@@ -414,6 +494,11 @@
             } finally {
                 btn.disabled = false;
             }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/login.html';
         }
     </script>
 </body>
