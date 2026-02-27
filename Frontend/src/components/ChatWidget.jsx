@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Send, X, Maximize2, Minimize2, RotateCcw, Edit2, Check, XCircle, Volume2, Square, Mic, MicOff, ArrowDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import chatbotIcon from '../assets/chatbot-icon.png';
 
 const ChatWidget = ({ config }) => {
     // ... existing state ...
@@ -367,7 +368,7 @@ const ChatWidget = ({ config }) => {
                             />
                             <button
                                 type="submit"
-                                className="grow-chatbot-trigger"
+                                className="grow-send-btn"
                                 style={{ width: '40px', height: '40px' }}
                                 disabled={isLoading}
                             >
@@ -379,7 +380,7 @@ const ChatWidget = ({ config }) => {
                 </div>
             ) : (
                 <button className="grow-chatbot-trigger" onClick={() => setIsOpen(true)}>
-                    <div className="grow-avatar-small" style={{ width: '40px', height: '40px', fontSize: '20px', margin: 0 }}>G</div>
+                    <img src={chatbotIcon} alt="Growlity AI" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '16px' }} />
                 </button>
             )}
         </div>

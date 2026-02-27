@@ -32,8 +32,8 @@
 .grow-chatbot-trigger {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
-  background-color: var(--growlity-blue);
+  border-radius: 16px;
+  background-color: transparent;
   color: white;
   display: flex;
   align-items: center;
@@ -42,6 +42,8 @@
   box-shadow: var(--glass-shadow);
   transition: transform 0.3s ease;
   border: none;
+  padding: 0;
+  overflow: hidden;
 }
 
 .grow-chatbot-trigger:hover {
@@ -295,6 +297,28 @@
   }
 }
 
+.grow-send-btn {
+  background-color: var(--growlity-blue);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.grow-send-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  background-color: #1d4ed8;
+}
+
+.grow-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .grow-scroll-bottom-btn {
   position: sticky;
   bottom: 10px;
@@ -389,7 +413,7 @@
   }
 
   /* Send button adjustment in mobile footer */
-  .grow-chatbot-footer .grow-chatbot-trigger {
+  .grow-chatbot-footer .grow-send-btn {
     width: 38px !important;
     height: 38px !important;
   }
