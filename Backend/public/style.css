@@ -1,0 +1,505 @@
+:root {
+    --growlity-green: #16A34A;
+    --growlity-blue: #2563EB;
+    --white: #ffffff;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-500: #6b7280;
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    --border-radius: 20px;
+}
+
+.grow-chatbot-container {
+    font-family: 'Inter', sans-serif;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    pointer-events: none;
+    /* Allow clicks through to background when closed */
+}
+
+.grow-chatbot-container>* {
+    pointer-events: auto;
+    /* Re-enable pointer events for children */
+}
+
+
+.grow-chatbot-trigger {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--growlity-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--glass-shadow);
+    transition: transform 0.3s ease;
+    border: none;
+}
+
+.grow-chatbot-trigger:hover {
+    transform: scale(1.1);
+}
+
+.grow-avatar-small {
+    width: 30px;
+    height: 30px;
+    background-color: var(--growlity-blue);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    color: white;
+    margin-right: 10px;
+}
+
+.grow-chatbot-window {
+    width: min(380px, calc(100vw - 48px));
+    max-height: 600px;
+    height: min(80vh, 600px);
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--border-radius);
+    box-shadow: var(--glass-shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-bottom: 16px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.grow-chatbot-window.expanded {
+    width: min(500px, calc(100vw - 48px));
+    height: min(90vh, 800px);
+    max-height: none;
+}
+
+
+.grow-chatbot-header {
+    padding: 16px;
+    background-color: var(--growlity-green);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.grow-chatbot-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.grow-message {
+    max-width: 80%;
+    width: fit-content;
+    padding: 10px 14px;
+    border-radius: 15px;
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+}
+
+.grow-message.user {
+    align-self: flex-end;
+    background-color: var(--growlity-blue);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.grow-message.ai {
+    align-self: flex-start;
+    background-color: white;
+    color: #333;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.grow-chatbot-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--gray-200);
+    background: white;
+}
+
+.grow-input-area {
+    display: flex;
+    gap: 8px;
+}
+
+.grow-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    outline: none;
+}
+
+.grow-power-tag {
+    text-align: center;
+    font-size: 10px;
+    color: var(--gray-500);
+    margin-top: 8px;
+}
+
+.grow-message.user p {
+    display: inline;
+}
+
+.grow-edit-btn {
+    font-size: 10px;
+    opacity: 0.6;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    color: inherit;
+    transition: opacity 0.2s;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.grow-edit-btn:hover {
+    opacity: 1;
+}
+
+.grow-speak-btn {
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    opacity: 0.7;
+}
+
+.grow-speak-btn:hover {
+    background: var(--gray-100);
+    opacity: 1;
+    color: var(--growlity-blue);
+}
+
+.grow-speak-btn.playing {
+    color: var(--growlity-green);
+    opacity: 1;
+    animation: voicePulse 1.5s infinite ease-in-out;
+}
+
+@keyframes voicePulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+        filter: drop-shadow(0 0 5px var(--growlity-green));
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Markdown Styling */
+.grow-message.ai table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 10px 0;
+    font-size: 12px;
+}
+
+.grow-message.ai th,
+.grow-message.ai td {
+    border: 1px solid var(--gray-200);
+    padding: 8px;
+    text-align: left;
+}
+
+.grow-message.ai th {
+    background-color: var(--gray-100);
+}
+
+.grow-message p {
+    margin-bottom: 12px;
+}
+
+.grow-message p:last-child {
+    margin-bottom: 0;
+}
+
+.grow-message.ai ul,
+.grow-message.ai ol {
+    padding-left: 20px;
+    margin: 12px 0;
+}
+
+.grow-message.ai li {
+    margin-bottom: 6px;
+}
+
+.grow-message.ai h3 {
+    font-size: 16px;
+    margin: 12px 0 8px 0;
+    color: var(--growlity-green);
+}
+
+.grow-mic-btn {
+    transition: all 0.3s ease;
+    border-radius: 50%;
+}
+
+.grow-mic-btn:hover {
+    background-color: var(--gray-100);
+}
+
+.grow-mic-btn.listening {
+    color: #ef4444;
+    animation: micPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes micPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.grow-scroll-bottom-btn {
+    position: sticky;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--gray-500);
+    z-index: 10;
+    transition: all 0.2s ease;
+    animation: bounceIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.grow-scroll-bottom-btn:hover {
+    background: var(--gray-100);
+    color: var(--growlity-blue);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes bounceIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.5);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .grow-chatbot-container {
+        bottom: 12px;
+        right: 12px;
+        left: auto;
+        align-items: flex-end;
+    }
+
+    .grow-chatbot-window {
+        width: min(400px, calc(100vw - 24px));
+        height: 75vh;
+        max-height: 500px;
+        border-radius: 15px;
+    }
+
+
+    .grow-chatbot-window.expanded {
+        width: calc(100vw - 24px);
+        height: 88vh;
+        max-height: none;
+    }
+
+
+    .grow-message {
+        max-width: 90%;
+        font-size: 13px;
+    }
+
+    .grow-input {
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    .grow-chatbot-header {
+        padding: 12px;
+    }
+
+    .grow-chatbot-footer {
+        padding: 10px;
+    }
+
+    /* Send button adjustment in mobile footer */
+    .grow-chatbot-footer .grow-chatbot-trigger {
+        width: 38px !important;
+        height: 38px !important;
+    }
+
+    .grow-chatbot-footer .grow-input {
+        padding: 8px 12px;
+    }
+}
+
+/* ======================================
+   WordPress / Astra Theme Overrides
+   Fix button shapes & SVG icon visibility
+   ====================================== */
+
+/* Reset ALL buttons inside the chatbot to prevent WP theme interference */
+.grow-chatbot-container button,
+.grow-chatbot-container button:hover,
+.grow-chatbot-container button:focus,
+.grow-chatbot-container button:active {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    background: none !important;
+    text-decoration: none !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    line-height: 1 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    font-family: inherit !important;
+}
+
+/* Re-apply send button specific styles AFTER the reset */
+.grow-chatbot-container .grow-chatbot-trigger {
+    background-color: var(--growlity-blue) !important;
+    color: white !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: var(--glass-shadow) !important;
+    cursor: pointer !important;
+}
+
+/* Re-apply scroll-to-bottom button styles */
+.grow-chatbot-container .grow-scroll-bottom-btn {
+    background: white !important;
+    border: 1px solid var(--gray-200) !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+    color: var(--gray-500) !important;
+    cursor: pointer !important;
+    width: 32px !important;
+    height: 32px !important;
+}
+
+/* Fix ALL SVG icons inside chatbot — Astra hides/resizes them */
+.grow-chatbot-container svg {
+    display: inline-block !important;
+    visibility: visible !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    vertical-align: middle !important;
+    fill: none !important;
+    overflow: visible !important;
+}
+
+/* Ensure suggested question buttons look correct */
+.grow-chatbot-container .grow-chatbot-footer>div button {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid var(--growlity-green) !important;
+    border-radius: 15px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    cursor: pointer !important;
+    color: var(--growlity-green) !important;
+}
+
+/* Reset mic button — don't apply suggestion styles */
+.grow-chatbot-container .grow-mic-btn {
+    background: none !important;
+    border: none !important;
+    border-radius: 50% !important;
+    padding: 8px !important;
+    color: #6b7280 !important;
+}
+
+.grow-chatbot-container .grow-mic-btn.listening {
+    color: #ef4444 !important;
+}
+
+/* But don't apply suggestion styles to the send trigger */
+.grow-chatbot-container .grow-chatbot-footer .grow-chatbot-trigger {
+    background-color: var(--growlity-blue) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+}
+
+/* Fix input field */
+.grow-chatbot-container .grow-input {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    box-shadow: none !important;
+    border: 1px solid var(--gray-200) !important;
+    border-radius: 10px !important;
+}

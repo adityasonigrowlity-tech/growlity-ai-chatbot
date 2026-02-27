@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import ChatWidget from './components/ChatWidget'
-import './index.css'
 
 
 function App() {

@@ -2,9 +2,10 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 const scrapeGrowlity = async (targetUrl) => {
+  let url = targetUrl;
   try {
     const apiKey = process.env.SCRAPE_DO_API_KEY;
-    const url = apiKey 
+    url = apiKey 
       ? `https://api.scrape.do/?token=${apiKey}&url=${encodeURIComponent(targetUrl)}`
       : targetUrl;
       
@@ -18,18 +19,31 @@ const scrapeGrowlity = async (targetUrl) => {
     const $ = cheerio.load(data);
 
     // Remove unwanted elements
-    $('header, footer, nav, script, style, .social-links, .navigation').remove();
+    $('header, footer, nav, script, style, noscript, iframe, .social-links, .navigation, svg').remove();
 
     const sections = [];
-    $('h1, h2, h3, p, li').each((i, el) => {
-      const text = $(el).text().trim();
-      if (text.length > 20) {
+    const seen = new Set();
+
+    // Use broader selectors for page-builder sites (WordPress Bricks, Elementor, etc.)
+    $('h1, h2, h3, h4, p, li, article, blockquote, td, th, figcaption').each((i, el) => {
+      // Get only direct text, strip any nested HTML tags
+      let text = $(el).text().trim().replace(/<[^>]*>/g, '');
+      if (text.length > 20 && !seen.has(text)) {
+        seen.add(text);
         sections.push(text);
       }
     });
 
+    // Fallback: if no structured content found, extract full body text
+    if (sections.length === 0) {
+      const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
+      if (bodyText.length > 50) {
+        return bodyText;
+      }
+    }
+
     const fullText = sections.join('\n\n');
-    return fullText;
+    return fullText || null;
   } catch (error) {
     console.error(`Scraping error for ${url}:`, error.message);
     return null;
