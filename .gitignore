@@ -34,3 +34,7 @@ Backend/.env
 Backend/test_audio.mp3
 **/node_modules
 **/.env
+Backend/*.txt
+Backend/knowledge_dump.txt
+Backend/test_output.txt
+Backend/final_test_report.txt

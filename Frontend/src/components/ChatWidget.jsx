@@ -152,10 +152,13 @@ const ChatWidget = ({ config }) => {
         setIsLoading(true);
         try {
             const history = messages.map(m => ({ role: m.role, content: m.content }));
+            // Add the current user query to the history being sent
+            const currentHistory = [...history, { role: 'user', content: text }];
+
             const baseUrl = config?.apiUrl || '';
             const response = await axios.post(`${baseUrl}/api/chat`, {
                 message: text,
-                history: history.slice(-5) // Send last few messages for context
+                history: currentHistory.slice(-10) // Increased to 10 for better context
             });
 
             const aiMsg = { role: 'ai', content: response.data.response, id: Date.now() + 1 };
@@ -196,11 +199,12 @@ const ChatWidget = ({ config }) => {
     };
 
     const clearChat = () => {
-        setMessages([{
+        const initialMsg = {
             role: 'ai',
             content: 'Conversation cleared. How can I help you again?',
             id: Date.now()
-        }]);
+        };
+        setMessages([initialMsg]);
         setSuggestedQuestions(PRESET_QUESTIONS);
     };
 

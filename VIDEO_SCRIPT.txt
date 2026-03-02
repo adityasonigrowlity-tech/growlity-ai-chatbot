@@ -1,0 +1,408 @@
+================================================================================
+            GROWLITY AI CHATBOT — VIDEO RECORDING SCRIPT
+            Duration: 3–4 Minutes | Total Sections: 2
+================================================================================
+
+
+================================================================================
+SECTION 1: LIVE DEMO  (~1.5 Minutes)
+================================================================================
+
+[SCREEN: Show the website with the chatbot widget visible in bottom-right corner]
+
+VOICEOVER / SCRIPT:
+
+"Hey everyone! Welcome to the demo of the Growlity AI Chatbot.
+
+This is a fully functional AI-powered chatbot built specifically for
+Growlity — an ESG and sustainability consulting company.
+
+Let me show you how it works."
+
+
+--- STEP 1: Opening the Chatbot Widget ---
+
+[ACTION: Click the chatbot icon in the bottom-right corner to open the widget]
+
+"As you can see, the chatbot widget sits neatly at the bottom-right corner
+of the website. When a visitor clicks on it, the chat window opens up with
+a clean, modern glassmorphism design."
+
+
+--- STEP 2: Asking a Question ---
+
+[ACTION: Type a question like "What is BRSR reporting?" and hit send]
+
+"Let's ask it a question — 'What is BRSR reporting?'
+
+The chatbot instantly processes the query. Behind the scenes, it searches
+through Growlity's knowledge base using Vector Search, retrieves the most
+relevant context, and then generates a professional, accurate response
+using a Large Language Model.
+
+You can see the response is well-structured — it uses bullet points,
+clear paragraphs, and provides helpful links."
+
+
+--- STEP 3: Follow-up Question (Conversation Memory) ---
+
+[ACTION: Ask a follow-up like "How can Growlity help with this?"]
+
+"Now let me ask a follow-up — 'How can Growlity help with this?'
+
+Notice that the chatbot remembers the context of our previous question.
+It understands we're still talking about BRSR reporting and gives a
+relevant answer with a link to Growlity's solutions page."
+
+
+--- STEP 4: Text-to-Speech Feature ---
+
+[ACTION: Click the speaker/audio icon on any AI response]
+
+"One really cool feature — the chatbot supports Text-to-Speech.
+If I click this speaker icon, the response is read aloud using a
+professional AI voice powered by ElevenLabs. This makes the chatbot
+accessible and engaging for users who prefer listening."
+
+
+--- STEP 5: Mobile Responsiveness ---
+
+[ACTION: Resize browser to mobile view or show on a phone]
+
+"The widget is also fully mobile-responsive. On smaller screens, it
+expands to full-width while maintaining all functionality. The chat
+button stays anchored at the bottom-right for easy access."
+
+
+--- STEP 6: Admin Panel (Quick Peek) ---
+
+[ACTION: Navigate to the admin panel page]
+
+"On the backend side, we have a secure Admin Panel. From here,
+admins can:
+ - Ingest new knowledge by providing a URL or pasting raw text
+ - View all existing knowledge entries
+ - Delete outdated knowledge entries
+
+This means the chatbot's knowledge base can be updated in real-time
+without touching any code."
+
+
+[TRANSITION: "Now let me take you behind the scenes..."]
+
+
+================================================================================
+SECTION 2: AI FEATURES — TECHNICAL DEEP DIVE  (~2 Minutes)
+================================================================================
+
+[SCREEN: Show the project folder structure in VS Code or file explorer]
+
+VOICEOVER / SCRIPT:
+
+"Alright, now let's dive into the technical side — how the AI features
+actually work under the hood."
+
+
+--- 2.1: OVERALL ARCHITECTURE ---
+
+[SCREEN: Show the project root — Backend/ and Frontend/ folders]
+
+"The project follows a clean, modular architecture with two main parts:
+
+  Backend/  — Built with Node.js and Express.js
+  Frontend/ — Built with React.js using Vite as the build tool
+
+Let me walk you through each layer."
+
+
+--- 2.2: TECH STACK OVERVIEW ---
+
+[SCREEN: Show package.json files for Backend and Frontend]
+
+"Here's the full tech stack:
+
+  BACKEND:
+   • Node.js + Express.js     — Server framework
+   • MongoDB Atlas             — Database with Vector Search
+   • LangChain                 — AI/LLM orchestration framework
+   • Groq (Llama 3.3 70b)     — Primary AI model (ultra-fast inference)
+   • OpenRouter (GPT-oss-120b) — Fallback AI model
+   • OpenAI Embeddings         — For converting text to vectors (via OpenRouter)
+   • ElevenLabs API            — Text-to-Speech generation
+   • Cheerio + Scrape.do       — Web scraping for knowledge ingestion
+   • Mongoose                  — MongoDB ODM
+   • JWT (jsonwebtoken)        — Admin authentication
+   • express-rate-limit        — API rate limiting for security
+
+  FRONTEND:
+   • React 18                  — UI library
+   • Vite                      — Build tool and dev server
+   • Axios                     — HTTP client for API calls
+   • Lucide React              — Icon library
+   • React-Markdown + GFM      — Renders AI responses as formatted Markdown
+   • Custom CSS                — Glassmorphism-styled responsive design"
+
+
+--- 2.3: THE AI BRAIN — aiService.js ---
+
+[SCREEN: Open Backend/services/aiService.js]
+
+"This is the core AI brain of the chatbot. This file handles everything
+related to AI response generation.
+
+  FILE: Backend/services/aiService.js
+  DEPENDENCIES: @langchain/openai, @langchain/groq, @langchain/core
+
+Here's how it works step-by-step:
+
+  STEP 1 — SYSTEM PROMPT:
+  At the top, we define a detailed System Prompt that tells the AI to act
+  as 'Growlity AI Chatbot' — a professional ESG consultant. It includes
+  specific guidelines like response length, tone, and when to share
+  links to Growlity's pages.
+
+  STEP 2 — RAG (Retrieval Augmented Generation):
+  The function 'getRelevantContext()' is the RAG engine.
+  When a user asks a question:
+    1. The question is converted into a vector using OpenAI Embeddings
+       (model: text-embedding-3-small, hosted via OpenRouter).
+    2. This vector is used to run a $vectorSearch query against MongoDB Atlas.
+       The search index is named 'AiChatbot' and it returns the top 5
+       most relevant knowledge chunks based on cosine similarity.
+    3. These chunks become the 'context' that is injected into the prompt.
+
+  STEP 3 — LLM RESPONSE with FALLBACK:
+  The function 'generateResponse()' sends the messages to the AI:
+    • Primary: Groq API running Llama 3.3 70b (ultra-fast, ~0.5s response)
+    • Fallback: OpenRouter running GPT-oss-120b (if Groq fails)
+  It also includes full conversation history for multi-turn context.
+
+  If both models fail, a graceful error message is returned."
+
+
+--- 2.4: WEB SCRAPING — scraper.js ---
+
+[SCREEN: Open Backend/services/scraper.js]
+
+"This file handles web scraping — it's how we feed knowledge into the
+chatbot.
+
+  FILE: Backend/services/scraper.js
+  DEPENDENCIES: axios, cheerio
+
+  'scrapeGrowlity()' takes a URL, fetches the page content (optionally
+  through Scrape.do API for anti-bot protection), and then uses Cheerio
+  to parse the HTML. It extracts clean text from headings, paragraphs,
+  lists, and tables while removing headers, footers, and navigation.
+
+  'chunkText()' breaks the scraped text into overlapping chunks of
+  800 characters with 150-character overlap. This ensures no context
+  is lost at chunk boundaries when stored in the database."
+
+
+--- 2.5: TEXT-TO-SPEECH — ttsService.js ---
+
+[SCREEN: Open Backend/services/ttsService.js]
+
+"This file powers the voice feature.
+
+  FILE: Backend/services/ttsService.js
+  DEPENDENCY: axios (calls ElevenLabs API)
+
+  It sends the AI-generated text to ElevenLabs' Text-to-Speech API
+  using the 'eleven_turbo_v2_5' model. The audio is streamed back
+  as an MP3 and played directly in the browser."
+
+
+--- 2.6: KNOWLEDGE INGESTION — ingestController.js ---
+
+[SCREEN: Open Backend/controllers/ingestController.js]
+
+"This controller handles how new knowledge gets added to the chatbot.
+
+  FILE: Backend/controllers/ingestController.js
+  DEPENDENCIES: scraper.js, Knowledge model, @langchain/openai
+
+  It exposes two main endpoints:
+    • 'ingestUrl'  — Scrapes a URL, chunks the text, generates embeddings
+                     for each chunk, and stores them in MongoDB
+    • 'ingestText' — Same flow but for manually pasted text
+
+  There are also endpoints to list all knowledge entries and to delete
+  specific entries or entire sources at once.
+
+  All ingest routes are protected by JWT authentication via the auth
+  middleware — only logged-in admins can modify the knowledge base."
+
+
+--- 2.7: DATABASE MODEL — Knowledge.js ---
+
+[SCREEN: Open Backend/models/Knowledge.js]
+
+"The knowledge is stored in MongoDB using this Mongoose model.
+
+  FILE: Backend/models/Knowledge.js
+  DEPENDENCY: mongoose
+
+  Each document has three key fields:
+    • 'content'   — The actual text chunk
+    • 'metadata'  — Source URL/title, chunk index, and type
+    • 'embedding' — A numeric vector array (1536 dimensions)
+                    used for MongoDB Atlas Vector Search"
+
+
+--- 2.8: SERVER & ROUTING — server.js ---
+
+[SCREEN: Open Backend/server.js]
+
+"The main server file ties everything together.
+
+  FILE: Backend/server.js
+  KEY MIDDLEWARE: CORS, rate-limiting, JSON parsing, JWT auth
+
+  API Routes:
+    • /api/chat    — Handles user messages (rate-limited)
+    • /api/tts     — Text-to-Speech requests
+    • /api/ingest  — Knowledge management (JWT-protected)
+    • /api/auth    — Admin login/authentication
+    • /health      — Health check endpoint
+
+  The server includes clean shutdown logic that properly closes
+  both the HTTP server and MongoDB connection."
+
+
+--- 2.9: FRONTEND — ChatWidget.jsx ---
+
+[SCREEN: Open Frontend/src/components/ChatWidget.jsx]
+
+"On the frontend, the entire chatbot is a single React component
+called ChatWidget.
+
+  FILE: Frontend/src/components/ChatWidget.jsx
+  DEPENDENCIES: react, axios, lucide-react, react-markdown, remark-gfm
+
+  It handles:
+    • Chat UI with animated message bubbles
+    • Sending questions to the backend via Axios
+    • Rendering AI responses as rich Markdown (with GFM support)
+    • Text-to-Speech playback with audio controls
+    • Message editing and re-sending
+    • Auto-scroll with a 'scroll to bottom' button
+    • Responsive design — full-width on mobile
+
+  The widget is built and exported as a UMD bundle (grow-ai-widget.js)
+  using Vite, so it can be embedded on any website — including WordPress
+  — with just a single script tag."
+
+
+================================================================================
+CLOSING  (~15 Seconds)
+================================================================================
+
+[SCREEN: Show the chatbot in action one more time]
+
+VOICEOVER / SCRIPT:
+
+"So that's the Growlity AI Chatbot — a full-stack, AI-powered solution
+built with the MERN stack, LangChain, and RAG architecture. It's
+production-ready, mobile-responsive, and can be deployed as a widget
+on any website.
+
+Thanks for watching!"
+
+
+================================================================================
+                        END OF SCRIPT
+================================================================================
+
+
+================================================================================
+QUICK REFERENCE — FILES & THEIR ROLES
+================================================================================
+
+FILE                                  | ROLE
+--------------------------------------|------------------------------------------
+Backend/server.js                     | Main Express server, routing, middleware
+Backend/services/aiService.js         | AI response generation (RAG + LLM)
+Backend/services/scraper.js           | Web scraping + text chunking
+Backend/services/ttsService.js        | ElevenLabs Text-to-Speech
+Backend/controllers/chatController.js | Handles /api/chat requests
+Backend/controllers/ingestController.js | Admin knowledge ingestion/management
+Backend/models/Knowledge.js           | Mongoose schema for knowledge vectors
+Backend/config/db.js                  | MongoDB connection setup
+Backend/middleware/auth.js            | JWT authentication middleware
+Backend/routes/chatRoutes.js          | Chat API route definitions
+Backend/routes/ttsRoutes.js           | TTS API route definitions
+Backend/routes/ingestRoutes.js        | Ingest API route definitions
+Backend/routes/authRoutes.js          | Auth API route definitions
+Frontend/src/components/ChatWidget.jsx| Main React chat widget component
+Frontend/src/index.css                | Glassmorphism CSS styling
+Frontend/src/main.jsx                 | React entry point + widget init
+Frontend/vite.config.js              | Vite build config (UMD bundle)
+
+
+================================================================================
+QUICK REFERENCE — DEPENDENCIES & WHAT THEY DO
+================================================================================
+
+BACKEND DEPENDENCY                    | PURPOSE
+--------------------------------------|------------------------------------------
+express                               | Web server framework
+mongoose                              | MongoDB object modeling (ODM)
+mongodb                               | MongoDB native driver
+langchain                             | LLM orchestration framework
+@langchain/groq                       | Groq API integration (Llama 3.3 70b)
+@langchain/openai                     | OpenAI/OpenRouter integration + embeddings
+@langchain/google-genai               | Google Gemini integration (available)
+@langchain/community                  | LangChain community integrations
+@langchain/core                       | Core message types (System/Human/AI)
+axios                                 | HTTP client (API calls, scraping)
+cheerio                               | HTML parsing for web scraping
+cors                                  | Cross-origin resource sharing
+dotenv                                | Environment variable loading
+express-rate-limit                    | API rate limiting (100 req/15 min)
+jsonwebtoken                          | JWT token auth for admin panel
+
+FRONTEND DEPENDENCY                   | PURPOSE
+--------------------------------------|------------------------------------------
+react                                 | UI component library
+react-dom                             | React DOM rendering
+axios                                 | HTTP client for API calls
+lucide-react                          | Icon library (Send, Mic, Edit icons)
+react-markdown                        | Renders Markdown in AI responses
+remark-gfm                            | GitHub Flavored Markdown support
+vite                                  | Build tool + dev server
+@vitejs/plugin-react                  | React support for Vite
+
+
+================================================================================
+RECORDING TIPS
+================================================================================
+
+1. BEFORE RECORDING:
+   - Make sure the backend server is running (npm start in Backend/)
+   - Make sure the frontend is running (npm run dev in Frontend/)
+   - Open the chatbot on localhost or the live website
+   - Have VS Code open with the project loaded
+
+2. SECTION 1 (DEMO):
+   - Keep your mouse movements smooth and deliberate
+   - Pause briefly after each chatbot response so viewers can read it
+   - Use clear, readable font sizes in the browser
+
+3. SECTION 2 (TECHNICAL):
+   - In VS Code, zoom in (Ctrl+= ) so code is readable on screen
+   - Highlight key lines of code as you explain them
+   - Consider using VS Code's minimap for quick navigation
+
+4. TIMING GUIDE:
+   - Section 1 (Demo):      ~1 min 30 sec
+   - Section 2 (Technical):  ~2 min 00 sec
+   - Closing:                ~15 sec
+   - TOTAL:                  ~3 min 45 sec
+
+5. SCREEN RESOLUTION:
+   - Record at 1920x1080 (Full HD) for best quality
+   - Use a clean desktop wallpaper with no distractions
+
+================================================================================

@@ -8,18 +8,23 @@ Always answer positively and professionally.
 Provide ESG, sustainability, BRSR, net-zero and carbon advisory answers.
 Keep responses medium length — 1-2 short paragraphs (around 100-200 words). Use bullet points for lists. Be clear and informative but avoid unnecessary detail.
 
+CONTEXT & HISTORY HANDLING:
+1. Use the provided conversation history to identify the core topic (e.g., BRSR, EcoVadis, Net-Zero).
+2. If the user asks a follow-up (like "process" or "what are the steps"), your answer MUST be about the topic identified in the history.
+3. If the provided context is about a DIFFERENT topic (e.g., if history is about BRSR but context is about EcoVadis), SILENTLY IGNORE the context and use your general knowledge to explain the history's topic.
+4. DO NOT explain to the user that the context is a mismatch or from a different standard. Just provide the correct answer directly.
+5. Resolve pronouns (e.g., "it", "that", "the process") using previous turns.
+
 RESPONSE GUIDELINES:
-1. Use the provided context as your primary source of truth.
-2. Structure your answer with clear paragraphs. Use at least one empty line (white space) between different thoughts or paragraphs.
-3. Use bullet points for lists to improve scannability.
-4. If the answer is not in the context, use your general knowledge of ESG and sustainability to provide a helpful answer, but maintain your persona as a Growlity consultant.
-5. If the query is completely unrelated to ESG or Growlity, politely guide the user back to sustainability topics.
-6. When a customer asks for any service of Growlity, provide this link to visit: https://growlity.com/solutions
-7. Never speak negatively about competitors.
-8. Automatically understand and ignore minor typos, spelling mistakes, or grammatical errors. Focus on the user's intended meaning.
-9. If a user asks about a webinar, provide this link to register for upcoming webinars: https://growlity.com/webinars
-10.If any person ask for footprint of growlity,than tell it provide service in all region of world.
-11.When any person asks about a whitepaper, give this link: https://growlity.com/esg-sustainability-publications/esg-sustainability-performance-of-25-global-solar-leaders
+1. Structure your answer with clear paragraphs. Use at least one empty line (white space) between different thoughts or paragraphs.
+2. Use bullet points for lists to improve scannability.
+3. If the query is completely unrelated to ESG or Growlity, politely guide the user back to sustainability topics.
+4. When a customer asks for any service of Growlity, provide this link to visit: https://growlity.com/solutions
+5. Never speak negatively about competitors.
+6. Automatically understand and ignore minor typos, spelling mistakes, or grammatical errors. Focus on the user's intended meaning.
+7. If a user asks about a webinar, provide this link to register for upcoming webinars: https://growlity.com/webinars
+8. If any person ask for footprint of growlity, tell it provide service in all region of world.
+9. When any person asks about a whitepaper, give this link: https://growlity.com/esg-sustainability-publications/esg-sustainability-performance-of-25-global-solar-leaders
 
 End every answer with: "For more personalized ESG guidance, book an appointment with Growlity: https://growlity.com/contact-us"`;
 
@@ -58,14 +63,48 @@ const getRelevantContext = async (query) => {
   return results.map(r => r.content).join('\n\n');
 };
 
+const condenseQuery = async (query, history) => {
+  if (!history || history.length === 0) return query;
+
+  const messages = [
+    new SystemMessage(`You are a question rephraser for an ESG chatbot. 
+    Your task is to take a follow-up question and rewrite it to be a standalone search query based on the conversation history.
+    
+    Rules:
+    - If the follow-up refers to a previous topic (e.g., "process ?", "how to do it?"), rewrite it to include that topic (e.g., "What is the BRSR reporting process?").
+    - DO NOT answer the question.
+    - ONLY return the rephrased question text.
+    - If the question is already standalone, return it as is.`),
+    ...history.map(m => m.role === 'ai' ? new AIMessage(m.content) : new HumanMessage(m.content)),
+    new HumanMessage(query)
+  ];
+
+  try {
+    const groq = new ChatGroq({
+      apiKey: process.env.GROQ_API_KEY,
+      model: "llama-3.3-70b-versatile", // Use the strong model for rephrasing too
+      temperature: 0,
+    });
+    const response = await groq.invoke(messages);
+    return response.content.trim();
+  } catch (err) {
+    console.error("Condense Query failed:", err.message);
+    return query;
+  }
+};
+
 const generateResponse = async (query, history = []) => {
   if (!Array.isArray(history)) history = [];
-  const context = await getRelevantContext(query);
+  
+  // Condense question for better context retrieval
+  const condensedQuery = await condenseQuery(query, history);
+  
+  const context = await getRelevantContext(condensedQuery);
   
   const messages = [
     new SystemMessage(SYSTEM_PROMPT),
     ...history.map(m => m.role === 'ai' ? new AIMessage(m.content) : new HumanMessage(m.content)),
-    new HumanMessage(`Context: ${context}\n\nQuestion: ${query}`)
+    new HumanMessage(`Context: ${context}\n\nQuestion: ${condensedQuery}`)
   ];
 
   // 1. Primary: Groq (Ultra-fast)
